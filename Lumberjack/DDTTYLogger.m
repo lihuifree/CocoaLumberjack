@@ -1155,17 +1155,39 @@ static DDTTYLogger *sharedInstance;
 	}
 }
 
+//*他喵的，找了半天不知道怎么自定义formatter 爆它菊花算了
+- (NSString *)formatLogMessage:(DDLogMessage *)logMessage
+{
+    NSString *logLevel;
+    switch (logMessage->logFlag)
+    {
+        case LOG_FLAG_ERROR  : logLevel = @"E"; break;
+        case LOG_FLAG_WARN   : logLevel = @"W"; break;
+        case LOG_FLAG_INFO   : logLevel = @"I"; break;
+        case LOG_FLAG_SOCKET : logLevel = @"S";
+            return [NSString stringWithFormat:@"╔===============================================================================\n%@╚===============================================================================\n",logMessage->logMsg];
+        default              : logLevel = @"V"; break;
+    }
+    NSString *fileName = [[NSString stringWithUTF8String:logMessage->file] lastPathComponent];
+    return [NSString stringWithFormat:@"%@ | %d | %@\n", fileName, logMessage->lineNumber , logMessage->logMsg];
+}
+//*/
+
 - (void)logMessage:(DDLogMessage *)logMessage
 {
 	NSString *logMsg = logMessage->logMsg;
 	BOOL isFormatted = NO;
-	
-	if (formatter)
-	{
-		logMsg = [formatter formatLogMessage:logMessage];
-		isFormatted = logMsg != logMessage->logMsg;
-	}
-	
+/*  见1163行，爆菊花前
+     if (formatter)
+     {
+     logMsg = [formatter formatLogMessage:logMessage];
+     isFormatted = logMsg != logMessage->logMsg;
+     }
+ //*/
+//*  见1163行，爆菊花后
+    logMsg = [self formatLogMessage:logMessage];
+    isFormatted = logMsg != logMessage->logMsg;
+//*/
 	if (logMsg)
 	{
 		// Search for a color profile associated with the log message
